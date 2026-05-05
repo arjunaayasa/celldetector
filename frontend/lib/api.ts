@@ -22,19 +22,21 @@ export function buildResultImageUrl(markedImageUrl: string): string {
 }
 
 async function readErrorMessage(response: Response, fallback: string): Promise<string> {
+  const text = await response.text();
+  if (!text) {
+    return fallback;
+  }
+
   try {
-    const payload = await response.json();
-    if (typeof payload.detail === "string") {
+    const payload = JSON.parse(text) as { detail?: unknown };
+    if (typeof payload.detail === "string" && payload.detail.trim()) {
       return payload.detail;
     }
   } catch {
-    const text = await response.text();
-    if (text) {
-      return text;
-    }
+    // Ignore JSON parse errors and return the raw response text below.
   }
 
-  return fallback;
+  return text;
 }
 
 function authHeaders(token: string): HeadersInit {

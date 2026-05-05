@@ -5,6 +5,7 @@ from typing import Any
 
 import cv2
 import numpy as np
+import torch
 from cellpose import models
 from PIL import Image, UnidentifiedImageError
 
@@ -18,6 +19,11 @@ LABEL_COLORS_BGR = {
 
 @lru_cache(maxsize=2)
 def get_cellpose_model(use_gpu: bool) -> models.Cellpose:
+    if not use_gpu:
+        # Some Linux CPU environments fail in oneDNN (mkldnn) with
+        # "could not create a primitive" during Cellpose/Torch inference.
+        torch.backends.mkldnn.enabled = False
+
     return models.Cellpose(gpu=use_gpu, model_type="cyto")
 
 
